@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <title>Assessment Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@500;650&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+    :root {
+      color-scheme: light dark;
+      --paper: #FDE8E9;
+      --surface: #FDE8E9;
+      --ink: #1F2232;
+      --muted: #596475;
+      --line: #E3BAC6;
+      --teal: #BC9EC1;
+      --teal-strong: #1F2232;
+      --teal-soft: #E3BAC6;
+      --coral: #596475;
+      --coral-soft: #E3BAC6;
+      --yellow: #BC9EC1;
+      --navy: #1F2232;
+      --success: #1F2232;
+      --success-soft: #BC9EC1;
+      --danger: #1F2232;
+      --danger-soft: #E3BAC6;
+      --button-ink: #1F2232;
+      --shadow: 0 18px 48px rgba(31, 34, 50, .14);
+      --radius: 18px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #1F2232;
+        --surface: #596475;
+        --ink: #FDE8E9;
+        --muted: #E3BAC6;
+        --line: #BC9EC1;
+        --teal: #E3BAC6;
+        --teal-strong: #FDE8E9;
+        --teal-soft: #596475;
+        --coral: #BC9EC1;
+        --coral-soft: #596475;
+        --yellow: #E3BAC6;
+        --navy: #FDE8E9;
+        --success: #FDE8E9;
+        --success-soft: #596475;
+        --danger: #FDE8E9;
+        --danger-soft: #596475;
+        --button-ink: #1F2232;
+        --shadow: 0 20px 58px rgba(31, 34, 50, .48);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--paper); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100svh;
+      color: var(--ink);
+      background:
+        linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 40px,
+        var(--paper);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .app {
+      width: min(1100px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: max(20px, env(safe-area-inset-top)) 0 max(28px, env(safe-area-inset-bottom));
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .setup {
+      min-height: calc(100vh - 48px);
+      min-height: calc(100svh - 48px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(300px, .88fr);
+      align-items: center;
+      gap: clamp(28px, 6vw, 76px);
+    }
+
+    .kicker,
+    .mono {
+      font-family: "Azeret Mono", monospace;
+      font-weight: 650;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .kicker {
+      color: var(--teal-strong);
+      font-size: .78rem;
+      margin: 0 0 16px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin-bottom: 18px;
+      max-width: 680px;
+      font-size: clamp(2.65rem, 7vw, 5.85rem);
+      line-height: .95;
+      letter-spacing: -.065em;
+      font-weight: 700;
+    }
+
+    .setup-copy > p:not(.kicker) {
+      max-width: 590px;
+      margin-bottom: 28px;
+      color: var(--muted);
+      font-size: clamp(1.08rem, 2vw, 1.3rem);
+    }
+
+    .rule-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      color: var(--navy);
+      font-weight: 600;
+    }
+
+    .rule-strip li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rule-strip li::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      background: var(--coral);
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .setup-panel {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: 7px solid var(--teal);
+      border-radius: 5px 5px var(--radius) var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(24px, 4vw, 38px);
+    }
+
+    .setup-panel::after {
+      content: "";
+      position: absolute;
+      right: 24px;
+      top: -14px;
+      width: 78px;
+      height: 20px;
+      border: 2px solid var(--line);
+      border-bottom: 0;
+      border-radius: 10px 10px 0 0;
+      background: var(--paper);
+    }
+
+    .setup-panel h2 {
+      margin-bottom: 5px;
+      font-size: 1.45rem;
+      letter-spacing: -.025em;
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: .94rem;
+      margin-bottom: 24px;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: .9rem;
+    }
+
+    .field input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 13px 14px;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px var(--teal-soft);
+    }
+
+    .primary,
+    .secondary,
+    .ghost,
+    .award-btn {
+      border: 0;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .15s ease, background-color .15s ease, border-color .15s ease;
+    }
+
+    .primary {
+      width: 100%;
+      min-height: 52px;
+      margin-top: 8px;
+      padding: 13px 20px;
+      border-radius: 11px;
+      background: var(--teal);
+      color: var(--button-ink);
+      box-shadow: 0 6px 0 var(--teal-strong);
+    }
+
+    .primary:hover { background: var(--teal-strong); }
+    .primary:active { transform: translateY(3px); box-shadow: 0 3px 0 var(--teal-strong); }
+    .primary:focus-visible, .secondary:focus-visible, .ghost:focus-visible, .option:focus-visible, .award-btn:focus-visible {
+      outline: 3px solid var(--yellow);
+      outline-offset: 3px;
+    }
+
+    .game-shell {
+      min-height: calc(100vh - 48px);
+      min-height: calc(100svh - 48px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(31, 34, 50, .10);
+    }
+
+    .player-score {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .player-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+    .score {
+      display: grid;
+      place-items: center;
+      min-width: 38px;
+      height: 38px;
+      padding: 0 8px;
+      background: var(--teal-soft);
+      color: var(--teal-strong);
+      border-radius: 8px;
+      font-family: "Azeret Mono", monospace;
+      font-weight: 650;
+    }
+    .progress-label { color: var(--muted); font-size: .8rem; white-space: nowrap; }
+
+    .progress-track {
+      height: 5px;
+      background: var(--line);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: -9px 1px 22px;
+    }
+    .progress-fill { height: 100%; width: 0; background: var(--coral); transition: width .35s ease; }
+
+    .question-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 230px;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .question-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(22px, 4vw, 42px);
+      display: flex;
+      flex-direction: column;
+      min-height: 540px;
+    }
+
+    .question-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .topic-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--teal-strong);
+      font-size: .76rem;
+    }
+    .topic-tag::before { content: ""; width: 18px; height: 3px; background: currentColor; }
+
+    .timer {
+      min-width: 62px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      text-align: center;
+      font-family: "Azeret Mono", monospace;
+      font-weight: 650;
+      color: var(--navy);
+    }
+    .timer.urgent { background: var(--coral-soft); color: var(--danger); border-color: var(--coral); }
+
+    .turn-line {
+      margin-bottom: 9px;
+      color: var(--coral);
+      font-size: .82rem;
+    }
+
+    .question-card h2 {
+      max-width: 830px;
+      margin-bottom: 28px;
+      font-size: clamp(1.55rem, 3.5vw, 2.55rem);
+      line-height: 1.14;
+      letter-spacing: -.035em;
+    }
+
+    .options {
+      display: grid;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .option {
+      width: 100%;
+      min-height: 58px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 13px 15px;
+      text-align: left;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      align-items: center;
+      gap: 13px;
+      font-weight: 600;
+    }
+
+    .option:hover:not(:disabled) { border-color: var(--teal); background: var(--teal-soft); }
+    .option:disabled { cursor: default; opacity: 1; }
+    .option .letter {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      font-family: "Azeret Mono", monospace;
+      font-size: .82rem;
+    }
+    .option.selected { border-color: var(--navy); box-shadow: inset 4px 0 0 var(--navy); }
+    .option.correct { background: var(--success-soft); border-color: var(--success); color: var(--success); }
+    .option.wrong { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .turn-card,
+    .host-tip {
+      background: var(--navy);
+      color: var(--paper);
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .turn-card small, .host-tip small { display: block; opacity: .72; margin-bottom: 7px; }
+    .turn-card strong { display: block; font-size: 1.35rem; line-height: 1.1; overflow-wrap: anywhere; }
+    .host-tip { background: var(--coral-soft); color: var(--ink); border: 1px solid var(--line); margin-top: auto; }
+    .host-tip p { margin: 0; font-size: .92rem; color: var(--muted); }
+
+    .feedback {
+      display: none;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    .feedback.show { display: block; }
+    .feedback-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .result-pill { padding: 4px 8px; border-radius: 6px; font-family: "Azeret Mono", monospace; font-size: .74rem; font-weight: 650; text-transform: uppercase; }
+    .result-pill.good { color: var(--success); background: var(--success-soft); }
+    .result-pill.bad { color: var(--danger); background: var(--danger-soft); }
+    .standard-ref { color: var(--muted); font-size: .85rem; }
+    .feedback p { margin: 0 0 16px; color: var(--muted); }
+    .feedback-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .secondary {
+      min-height: 44px;
+      padding: 10px 16px;
+      border-radius: 9px;
+      background: var(--teal);
+      color: var(--button-ink);
+    }
+    .ghost {
+      min-height: 44px;
+      padding: 10px 16px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .finish {
+      min-height: calc(100vh - 48px);
+      min-height: calc(100svh - 48px);
+      display: grid;
+      place-items: center;
+    }
+
+    .finish-card {
+      width: min(760px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(28px, 6vw, 58px);
+      text-align: center;
+    }
+
+    .finish-mark {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 20px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--yellow);
+      color: var(--button-ink);
+      font-family: "Azeret Mono", monospace;
+      font-size: 1.65rem;
+      font-weight: 650;
+      box-shadow: 0 0 0 10px color-mix(in srgb, var(--yellow) 22%, transparent);
+    }
+
+    .finish-card h2 {
+      margin-bottom: 9px;
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      letter-spacing: -.05em;
+      line-height: 1;
+    }
+    .finish-card > p { color: var(--muted); }
+
+    .final-scores {
+      width: min(360px, 100%);
+      margin: 28px auto;
+      text-align: left;
+    }
+    .final-player { padding: 18px; background: var(--paper); border: 1px solid var(--teal); border-radius: 12px; box-shadow: inset 0 4px 0 var(--teal); }
+    .final-player span { display: block; color: var(--muted); overflow-wrap: anywhere; }
+    .final-player strong { display: block; margin-top: 4px; font-family: "Azeret Mono", monospace; font-size: 2rem; }
+
+    .takeaway {
+      margin: 0 0 24px;
+      padding: 18px;
+      border-left: 5px solid var(--coral);
+      background: var(--coral-soft);
+      text-align: left;
+    }
+    .takeaway strong { display: block; margin-bottom: 3px; }
+    .takeaway p { margin: 0; color: var(--muted); }
+
+    .finish-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+    .finish-actions .primary { width: auto; margin: 0; min-width: 170px; }
+
+    .sources {
+      margin-top: 26px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      text-align: left;
+    }
+    .sources summary { cursor: pointer; font-weight: 700; color: var(--teal-strong); }
+    .sources ul { margin: 12px 0 0; padding-left: 20px; color: var(--muted); font-size: .9rem; }
+    .sources a { color: var(--teal-strong); overflow-wrap: anywhere; }
+
+    @media (max-width: 820px) {
+      .setup { grid-template-columns: 1fr; align-content: center; padding: 24px 0; }
+      .setup-copy { text-align: left; }
+      .question-layout { grid-template-columns: 1fr; }
+      .side-panel { display: none; }
+      .question-card { min-height: auto; }
+    }
+
+    @media (max-width: 560px) {
+      .app { width: min(100% - 18px, 1100px); padding-top: 10px; }
+      .setup { min-height: auto; gap: 24px; }
+      h1 { font-size: clamp(2.6rem, 15vw, 4.5rem); }
+      .game-topbar { gap: 8px; }
+      .progress-label { text-align: right; }
+      .question-card { padding: 19px 16px; }
+      .question-meta { margin-bottom: 17px; }
+      .question-card h2 { margin-bottom: 20px; }
+      .option { min-height: 54px; grid-template-columns: 30px 1fr; gap: 10px; padding: 11px; }
+      .option .letter { width: 29px; height: 29px; }
+      .feedback-actions > * { width: 100%; }
+      .finish-actions > * { width: 100% !important; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="screen active" id="setupScreen" aria-labelledby="setupTitle">
+      <div class="setup">
+        <div class="setup-copy">
+          <p class="kicker">Final assessment · class challenge</p>
+          <h1 id="setupTitle">What should the nurse do?</h1>
+          <p>Put BCCNM’s Duty to Provide Care and Duty to Report standards into action through eight fast clinical scenarios.</p>
+          <ul class="rule-strip" aria-label="Game rules">
+            <li>1 player</li>
+            <li>8 scenarios</li>
+            <li>20 seconds each</li>
+          </ul>
+        </div>
+
+        <form class="setup-panel" id="setupForm">
+          <h2>Name the player</h2>
+          <p class="helper">Read each scenario, choose the best response, and see your score at the end.</p>
+          <div class="field">
+            <label for="playerInput">Player name</label>
+            <input id="playerInput" maxlength="24" value="Player" autocomplete="off" />
+          </div>
+          <button class="primary" type="submit">Start the challenge</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="screen" id="gameScreen" aria-live="polite">
+      <div class="game-shell">
+        <header class="game-topbar" aria-label="Scoreboard">
+          <div class="player-score">
+            <span class="score" id="score">0</span>
+            <span class="player-name" id="playerName">Player</span>
+          </div>
+          <div class="progress-label mono" id="progressLabel">Question 1 / 8</div>
+        </header>
+        <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+        <div class="question-layout">
+          <article class="question-card">
+            <div class="question-meta">
+              <span class="topic-tag mono" id="topicTag">Duty to Provide Care</span>
+              <span class="timer" id="timer" aria-label="Seconds remaining">20s</span>
+            </div>
+            <p class="turn-line mono" id="turnLine">Choose the best response</p>
+            <h2 id="questionText"></h2>
+            <div class="options" id="options"></div>
+            <div class="feedback" id="feedback">
+              <div class="feedback-head">
+                <span class="result-pill" id="resultPill"></span>
+                <span class="standard-ref mono" id="standardRef"></span>
+              </div>
+              <p id="explanation"></p>
+              <div class="feedback-actions">
+                <button class="secondary" id="nextButton" type="button">Next round</button>
+                <button class="ghost" id="sourceButton" type="button">Open official standard</button>
+              </div>
+            </div>
+          </article>
+
+          <aside class="side-panel" aria-label="Game notes">
+            <div class="turn-card">
+              <small class="mono">Current score</small>
+              <strong id="sideScore">0 points</strong>
+            </div>
+            <div class="host-tip">
+              <small class="mono">Quick tip</small>
+              <p>Read each option carefully, then tap your final answer. Correct answers earn one point.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="finishScreen" aria-labelledby="finishTitle">
+      <div class="finish">
+        <div class="finish-card">
+          <div class="finish-mark">✓</div>
+          <p class="kicker">Handoff complete</p>
+          <h2 id="finishTitle">Clinical judgment wins.</h2>
+          <p id="finishSubtitle">You worked through all eight scenarios.</p>
+          <div class="final-scores">
+            <div class="final-player"><span id="finalPlayerName">Player</span><strong id="finalScore">0 / 8</strong></div>
+          </div>
+          <div class="takeaway">
+            <strong>One shared purpose</strong>
+            <p>Provide safe, competent and ethical care—and act when client or public safety is at risk.</p>
+          </div>
+          <div class="finish-actions">
+            <button class="primary" id="playAgain" type="button">Play again</button>
+            <button class="ghost" id="reviewAnswers" type="button">Review all answers</button>
+          </div>
+          <details class="sources" id="sourceDetails">
+            <summary>Official BCCNM sources</summary>
+            <ul>
+              <li><a href="https://www.bccnm.ca/RN/PracticeStandards/Pages/DutyToProvideCare.aspx" target="_blank" rel="noopener">Nurses: Duty to Provide Care</a></li>
+              <li><a href="https://bccnm.ca/NP/PracticeStandards/Pages/dutytoreport.aspx" target="_blank" rel="noopener">Nurses: Duty to Report</a></li>
+              <li>Both standards were approved March 1, 2026 and came into force April 1, 2026.</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="reviewScreen" aria-labelledby="reviewTitle">
+      <div class="finish" style="place-items:start center; padding: 22px 0;">
+        <div class="finish-card" style="text-align:left; width:min(880px,100%);">
+          <p class="kicker">Answer review</p>
+          <h2 id="reviewTitle" style="font-size:clamp(2rem,5vw,3.2rem);">Eight decisions, explained.</h2>
+          <div id="reviewList"></div>
+          <div class="finish-actions" style="justify-content:flex-start; margin-top:24px;">
+            <button class="primary" id="reviewPlayAgain" type="button">Play again</button>
+            <button class="ghost" id="backToResults" type="button">Back to results</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var careUrl = "https://www.bccnm.ca/RN/PracticeStandards/Pages/DutyToProvideCare.aspx";
+      var reportUrl = "https://bccnm.ca/NP/PracticeStandards/Pages/dutytoreport.aspx";
+
+      var questions = [
+        {
+          topic: "Duty to Provide Care",
+          standard: "Standard 4",
+          source: careUrl,
+          question: "A client was rude to the nurse yesterday. Today, the nurse refuses to help with the client’s bath. Is that acceptable?",
+          options: [
+            "Yes—the nurse can refuse care after disrespectful behaviour.",
+            "No—personal judgments must not compromise the client’s care.",
+            "Only if the nurse documents the refusal in the chart."
+          ],
+          answer: 1,
+          explanation: "A nurse cannot withdraw or refuse care because of personal judgments about a client or the client’s lifestyle. Safety concerns are different and require a risk-based response."
+        },
+        {
+          topic: "Duty to Report",
+          standard: "Standard 2",
+          source: reportUrl,
+          question: "A nurse notices a regulated colleague repeatedly making serious medication errors that may endanger the public. What is required?",
+          options: [
+            "Wait until a client is harmed before acting.",
+            "Mention it informally at the next staff meeting.",
+            "Report the pattern in writing to the appropriate regulatory body."
+          ],
+          answer: 2,
+          explanation: "A pattern of incompetent practice that may endanger the public must be reported in writing to the appropriate regulatory body."
+        },
+        {
+          topic: "Duty to Provide Care",
+          standard: "Standard 6",
+          source: careUrl,
+          question: "A nurse has a conscientious objection to a client’s planned treatment. Which response best meets the standard?",
+          options: [
+            "Tell the client why the treatment is morally wrong.",
+            "Notify the appropriate person early and help arrange uninterrupted care.",
+            "Leave the assignment immediately and let the unit solve it."
+          ],
+          answer: 1,
+          explanation: "The nurse must not influence the client, must inform the appropriate person well in advance, and must work with the organization to ensure continuity and a safe transfer if needed."
+        },
+        {
+          topic: "Duty to Report",
+          standard: "Standard 5",
+          source: reportUrl,
+          question: "A nurse reports unsafe professional conduct to a supervisor, but learns no report was made. What comes next?",
+          options: [
+            "The nurse’s duty ended after telling the supervisor.",
+            "The nurse must make a direct report to the regulatory body.",
+            "The nurse should post a warning for coworkers."
+          ],
+          answer: 1,
+          explanation: "Employment policies still apply, but if the supervisor or employer has not made the report, the nurse must report directly to the regulatory body."
+        },
+        {
+          topic: "Duty to Provide Care",
+          standard: "Standard 3",
+          source: careUrl,
+          question: "An unexpected emergency creates imminent risk of death. The only nurse present is asked to act beyond their usual scope. What is expected?",
+          options: [
+            "Provide the best care possible given the circumstances and competence.",
+            "Do nothing until someone with the exact scope arrives.",
+            "Perform any procedure requested, regardless of competence."
+          ],
+          answer: 0,
+          explanation: "In an unexpected emergency involving imminent risk of death or serious harm, a nurse is ethically obligated to provide the best care possible given the situation and their level of competence."
+        },
+        {
+          topic: "Duty to Report",
+          standard: "Standard 4",
+          source: reportUrl,
+          question: "A client tells a nurse about sexual misconduct by a regulated health professional. Before reporting, what must the nurse obtain?",
+          options: [
+            "The client’s or substitute decision-maker’s consent.",
+            "The accused professional’s permission.",
+            "A written statement from two witnesses."
+          ],
+          answer: 0,
+          explanation: "When the concern is based on information from a client, the nurse must first obtain consent from the client or substitute decision-maker before making the report."
+        },
+        {
+          topic: "Duty to Provide Care",
+          standard: "Standard 7",
+          source: careUrl,
+          question: "A nurse accepts an assignment, then leaves without arranging replacement care or giving the employer time to do so. What is this?",
+          options: [
+            "Conscientious objection",
+            "Appropriate withdrawal",
+            "Client abandonment"
+          ],
+          answer: 2,
+          explanation: "After accepting an assignment or engaging with a client, discontinuing care without an agreed withdrawal, suitable replacement, or reasonable employer opportunity is abandonment."
+        },
+        {
+          topic: "Duty to Report",
+          standard: "Standard 7",
+          source: reportUrl,
+          question: "A nurse is charged with an offence identified by law as relevant to working with vulnerable adults. What must the nurse do?",
+          options: [
+            "Report the charge to BCCNM.",
+            "Wait for a conviction before telling anyone.",
+            "Report only if the employer asks."
+          ],
+          answer: 0,
+          explanation: "A nurse has a legal duty to report to BCCNM when charged with or convicted of a legislatively identified offence relevant to work with children or vulnerable adults."
+        }
+      ];
+
+      var state = {
+        player: "Player",
+        score: 0,
+        index: 0,
+        locked: false,
+        time: 20,
+        timerId: null
+      };
+
+      var screens = {
+        setup: document.getElementById("setupScreen"),
+        game: document.getElementById("gameScreen"),
+        finish: document.getElementById("finishScreen"),
+        review: document.getElementById("reviewScreen")
+      };
+
+      function showScreen(name) {
+        Object.keys(screens).forEach(function (key) {
+          screens[key].classList.toggle("active", key === name);
+        });
+        window.scrollTo(0, 0);
+      }
+
+      function safePlayerName(value, fallback) {
+        var trimmed = value.trim();
+        return trimmed ? trimmed.slice(0, 24) : fallback;
+      }
+
+      function startGame(event) {
+        if (event) event.preventDefault();
+        state.player = safePlayerName(document.getElementById("playerInput").value, "Player");
+        state.score = 0;
+        state.index = 0;
+        state.locked = false;
+        updatePlayerScore();
+        showScreen("game");
+        renderQuestion();
+      }
+
+      function updatePlayerScore() {
+        document.getElementById("playerName").textContent = state.player;
+        document.getElementById("score").textContent = state.score;
+        document.getElementById("sideScore").textContent = state.score + (state.score === 1 ? " point" : " points");
+      }
+
+      function startTimer() {
+        clearInterval(state.timerId);
+        state.time = 20;
+        paintTimer();
+        state.timerId = setInterval(function () {
+          if (state.locked) {
+            clearInterval(state.timerId);
+            return;
+          }
+          state.time -= 1;
+          paintTimer();
+          if (state.time <= 0) {
+            clearInterval(state.timerId);
+            lockAnswer(-1);
+          }
+        }, 1000);
+      }
+
+      function paintTimer() {
+        var timer = document.getElementById("timer");
+        timer.textContent = state.time + "s";
+        timer.classList.toggle("urgent", state.time <= 5);
+      }
+
+      function renderQuestion() {
+        state.locked = false;
+        var q = questions[state.index];
+        document.getElementById("progressLabel").textContent = "Question " + (state.index + 1) + " / " + questions.length;
+        document.getElementById("progressFill").style.width = ((state.index / questions.length) * 100) + "%";
+        document.getElementById("topicTag").textContent = q.topic;
+        document.getElementById("turnLine").textContent = state.player + ", choose the best response";
+        document.getElementById("questionText").textContent = q.question;
+        document.getElementById("feedback").classList.remove("show");
+
+        var options = document.getElementById("options");
+        options.innerHTML = "";
+        q.options.forEach(function (text, index) {
+          var button = document.createElement("button");
+          button.type = "button";
+          button.className = "option";
+          button.innerHTML = '<span class="letter">' + String.fromCharCode(65 + index) + '</span><span></span>';
+          button.lastChild.textContent = text;
+          button.addEventListener("click", function () { lockAnswer(index); });
+          options.appendChild(button);
+        });
+        document.getElementById("nextButton").textContent = state.index === questions.length - 1 ? "See final score" : "Next question";
+        startTimer();
+      }
+
+      function lockAnswer(selectedIndex) {
+        if (state.locked) return;
+        state.locked = true;
+        clearInterval(state.timerId);
+        var q = questions[state.index];
+        var buttons = Array.prototype.slice.call(document.querySelectorAll(".option"));
+        buttons.forEach(function (button, index) {
+          button.disabled = true;
+          if (index === q.answer) button.classList.add("correct");
+          if (index === selectedIndex) button.classList.add("selected");
+          if (index === selectedIndex && selectedIndex !== q.answer) button.classList.add("wrong");
+        });
+
+        var correct = selectedIndex === q.answer;
+        if (correct) {
+          state.score += 1;
+          updatePlayerScore();
+        }
+        var pill = document.getElementById("resultPill");
+        pill.textContent = correct ? "Correct · +1" : (selectedIndex === -1 ? "Time's up" : "Not quite");
+        pill.className = "result-pill " + (correct ? "good" : "bad");
+        document.getElementById("standardRef").textContent = q.topic + " · " + q.standard;
+        document.getElementById("explanation").textContent = q.explanation;
+        document.getElementById("feedback").classList.add("show");
+        document.getElementById("nextButton").focus({ preventScroll: true });
+      }
+
+      function nextRound() {
+        if (!state.locked) return;
+        state.index += 1;
+        if (state.index >= questions.length) {
+          finishGame();
+        } else {
+          renderQuestion();
+        }
+      }
+
+      function finishGame() {
+        clearInterval(state.timerId);
+        document.getElementById("progressFill").style.width = "100%";
+        document.getElementById("finalPlayerName").textContent = state.player;
+        document.getElementById("finalScore").textContent = state.score + " / " + questions.length;
+
+        var title = "Review complete.";
+        if (state.score >= 7) {
+          title = "Excellent clinical judgment.";
+        } else if (state.score >= 5) {
+          title = "Strong clinical judgment.";
+        }
+        document.getElementById("finishTitle").textContent = title;
+        document.getElementById("finishSubtitle").textContent = "You answered " + state.score + " of " + questions.length + " scenarios correctly.";
+        showScreen("finish");
+      }
+
+      function buildReview() {
+        var list = document.getElementById("reviewList");
+        list.innerHTML = "";
+        questions.forEach(function (q, i) {
+          var item = document.createElement("article");
+          item.style.cssText = "padding:18px 0;border-top:1px solid var(--line);";
+          var meta = document.createElement("p");
+          meta.className = "mono";
+          meta.style.cssText = "font-size:.74rem;color:var(--teal-strong);margin-bottom:7px;";
+          meta.textContent = (i + 1) + " · " + q.topic + " · " + q.standard;
+          var heading = document.createElement("h3");
+          heading.style.cssText = "font-size:1.08rem;margin-bottom:6px;";
+          heading.textContent = q.options[q.answer];
+          var explanation = document.createElement("p");
+          explanation.style.cssText = "color:var(--muted);margin:0;";
+          explanation.textContent = q.explanation;
+          item.appendChild(meta);
+          item.appendChild(heading);
+          item.appendChild(explanation);
+          list.appendChild(item);
+        });
+      }
+
+      document.getElementById("setupForm").addEventListener("submit", startGame);
+      document.getElementById("nextButton").addEventListener("click", nextRound);
+      document.getElementById("sourceButton").addEventListener("click", function () {
+        window.open(questions[state.index].source, "_blank", "noopener");
+      });
+      document.getElementById("playAgain").addEventListener("click", startGame);
+      document.getElementById("reviewPlayAgain").addEventListener("click", startGame);
+      document.getElementById("reviewAnswers").addEventListener("click", function () {
+        buildReview();
+        showScreen("review");
+      });
+      document.getElementById("backToResults").addEventListener("click", function () { showScreen("finish"); });
+    })();
+  </script>
+</body>
+</html>
